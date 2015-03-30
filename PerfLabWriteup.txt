@@ -1,0 +1,57 @@
+cs1300bmp.h
+-Changed int color(...) to a short color(...)
+	This is because the only values stored in color are between
+	0 and 255, but we have to make sure we don't cause an over or
+	under flow, so that's why we make it a short instead of a char
+
+Filter.h/Filter.cpp/FilterMain.cpp
+-Removed the entire function of setDivisor()
+	Trying to get rid of extra function calls in the 5 nested for
+	loops
+-Changed the matrix arrays to single arrays for set() and get()
+	This helped make sure we were in stride-1 when going through
+	the data[] in filter
+	
+	Could have left it as a matrix, but thought that since it was
+	reducing the math when trying to set() and get(), a single 
+	array was more efficient
+
+FilterMain.cpp
+-Moved all initiated local variables outside the for loops
+	Reduces the amount of times the variables must be initiated
+-Unrolled the inner two for loops
+	This got rid of for loop overhead because we got rid of the for
+	loops.  We were able to hard-code the calculations because
+	we knew how the numbers were accessing the arrays
+-<initially> We made a local array to hold all the values from the 
+get()
+	This was important because instead of calling get() 9*cycles
+	through all the for loops, we only called it a total of 9 times
+-Pipelined the hard-coded calculations in the inner for loops
+	Instead of accessing output -> blah blah multiple times, we
+	used a local variable to do the math, then we set that at the
+	end of all the calculations
+	
+	We alternated sum1 and sum2 so that we could almost parallel
+	the math and then we would add them together at the end for
+	our final results
+-Finally, we created four separate functions rather than a single function for applying the filter
+	Each function had a specific set of values, so at the top of
+	the file, where it called applyFilter, we created if/else
+	statements which will check the filename to determine which
+	new function to call
+	
+	This way we didn't have to call any additional functions and
+	ended up hard-coding the entire math with constants
+	
+	This had a massive increase to optimization allowing for 
+	the compiler to deal with only constants rather than variables
+	
+	By doing this, we don't even have to create our pointer objects
+	filter
+
+MakeFile
+-Added the -02 flag
+	Tried different optimization packages to see what worked best
+	Didn't notice any huge jumps, but we got a much more constant
+	result when using -O2
